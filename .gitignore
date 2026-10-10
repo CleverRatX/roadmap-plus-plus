@@ -1,0 +1,33 @@
+# --- .NET ---
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+coverage*/
+*.coverage
+
+# --- Node / фронт ---
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+
+# --- Секреты и окружение ---
+.env
+.env.*
+!.env.example
+appsettings.*.local.json
+
+# --- Данные локальных контейнеров ---
+deploy/postgres/data/
+
+# --- IDE / ОС ---
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+.DS_Store
+Thumbs.db
