@@ -21,9 +21,6 @@ npm-debug.log*
 !.env.example
 appsettings.*.local.json
 
-# --- Данные локальных контейнеров ---
-deploy/postgres/data/
-
 # --- IDE / ОС ---
 .idea/
 .vscode/*
