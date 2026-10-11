@@ -145,7 +145,7 @@ flowchart LR
 roadmap-plus-plus/
 ├── README.md
 ├── .editorconfig, .gitattributes, .gitignore
-├── .github/workflows/                       # CI: backend.yml — формат, сборка, тесты бэкенда
+├── .github/workflows/                       # CI: backend.yml — формат, сборка, тесты; frontend.yml — линтер, сборка
 │
 ├── backend/
 │   ├── RoadmapPlusPlus.slnx                 # решение (.NET 10 создаёт .slnx вместо .sln)
@@ -270,7 +270,7 @@ docker compose up -d --build
 # OpenAPI: http://localhost:8080/api/openapi/v1.json
 ```
 
-Локальная разработка: `docker compose up -d db`, затем `dotnet watch` в `backend/src/Bootstrapper/RoadmapPlusPlus.Api` и `npm ci && npm run dev` в `frontend/` (Vite на `:5173` проксирует `/api` на бэкенд `:5080`).
+Локальная разработка: `docker compose up -d db`, затем `dotnet watch` в `backend/src/Bootstrapper/RoadmapPlusPlus.Api` и `npm ci && npm run dev` в `frontend/` (Node 24 из `frontend/.nvmrc`; Vite на `:5173` проксирует `/api` на бэкенд `:5080`).
 
 <details>
 <summary>Как превратить папки в проекты (этап 0)</summary>
@@ -315,7 +315,7 @@ dotnet sln add src/*/*/*.csproj src/Modules/*/*/*.csproj
 
 ## Ветки и PR
 
-`main` всегда собирается и проходит CI. Напрямую в `main` не коммитим: любая работа идёт в короткой ветке и вливается через PR. Защита `main`: обязательный PR и зелёная проверка `backend` из [`.github/workflows/backend.yml`](.github/workflows/backend.yml) — формат кода, сборка и тесты бэкенда.
+`main` всегда собирается и проходит CI. Напрямую в `main` не коммитим: любая работа идёт в короткой ветке и вливается через PR. Защита `main`: обязательный PR и зелёные проверки `backend` из [`.github/workflows/backend.yml`](.github/workflows/backend.yml) (формат кода, сборка, тесты) и `frontend` из [`.github/workflows/frontend.yml`](.github/workflows/frontend.yml) (линтер, проверка типов, сборка). Предупреждения в обоих считаются ошибками.
 
 **Имя ветки:** `<тип>/<область>-<суть>`, а если есть issue — `<тип>/<номер>-<область>-<суть>`.
 
