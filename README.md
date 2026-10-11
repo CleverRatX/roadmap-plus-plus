@@ -128,7 +128,7 @@ flowchart LR
 | ИИ | Microsoft.Extensions.AI (`IChatClient`) | один интерфейс для Mock / OpenAI-совместимых (Qwen, GPT) / Claude |
 | Границы модулей | xUnit-тесты: граф ссылок из `.csproj`, публичные типы модулей через reflection. ArchUnitNET — когда понадобятся правила слоёв внутри модуля | архитектурные тесты в CI |
 | Realtime (позже) | SignalR | совместное редактирование |
-| Frontend | React + TypeScript + Vite | SPA |
+| Frontend | React 19, TypeScript 6, Vite 8, линтер oxlint | SPA |
 | Данные на фронте | TanStack Query, клиент из OpenAPI (orval / openapi-typescript) | кэш, типы из контракта |
 | Таблица задач | TanStack Table | своя таблица (вариант A из ADR-0001) |
 | Таймлайн | d3-scale + d3-zoom, своя отрисовка (SVG / Canvas) | плавный зум год → минуты; для быстрого прототипа — vis-timeline |
@@ -202,7 +202,7 @@ roadmap-plus-plus/
 ├── frontend/                                # Feature-Sliced Design (облегчённый)
 │   ├── public/
 │   └── src/
-│       ├── app/                             # вход, роутер, провайдеры, глобальные стили
+│       ├── app/                             # вход (main.tsx, App.tsx), роутер, провайдеры, глобальные стили
 │       ├── pages/                           # roadmap, event, agenda, knowledge, settings
 │       ├── widgets/                         # timeline, event-panel, task-table, agenda-list,
 │       │                                    # kb-viewer, assistant-panel
@@ -270,7 +270,7 @@ docker compose up -d --build
 # OpenAPI: http://localhost:8080/api/openapi/v1.json
 ```
 
-Локальная разработка: `docker compose up -d db`, затем `dotnet watch` в `backend/src/Bootstrapper/RoadmapPlusPlus.Api` и `npm run dev` в `frontend/` (Vite проксирует `/api` на бэкенд).
+Локальная разработка: `docker compose up -d db`, затем `dotnet watch` в `backend/src/Bootstrapper/RoadmapPlusPlus.Api` и `npm ci && npm run dev` в `frontend/` (Vite на `:5173` проксирует `/api` на бэкенд `:5080`).
 
 <details>
 <summary>Как превратить папки в проекты (этап 0)</summary>
@@ -305,10 +305,9 @@ dotnet add src/Modules/Interchange/$P.Modules.Interchange reference $(c Identity
 dotnet add src/Modules/Assistant/$P.Modules.Assistant     reference $(c Identity) $(c Planning) $(c Interchange)
 
 dotnet sln add src/*/*/*.csproj src/Modules/*/*/*.csproj
-
-cd ../frontend
-npm create vite@latest . -- --template react-ts   # на вопрос о непустой папке — «Ignore files and continue»
 ```
+
+Фронтенд создан шаблоном `create-vite` (`react-ts`) во временной папке и перенесён в FSD-структуру: точка входа — `src/app/main.tsx`, алиас `@/` указывает на `src/`.
 
 Тестовые проекты создаём по мере появления тестов, по образцу `RoadmapPlusPlus.ArchitectureTests` (xUnit v3 на Microsoft.Testing.Platform). Шаблон `dotnet new xunit` не подходит: он создаёт проект на xUnit v2 и VSTest. Модуль Notifications создаём, когда до него дойдём.
 
