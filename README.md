@@ -144,10 +144,14 @@ flowchart LR
 ```
 roadmap-plus-plus/
 ├── README.md
-├── .editorconfig, .gitignore
+├── .editorconfig, .gitattributes, .gitignore
 ├── .github/workflows/                       # CI: сборка, тесты, архитектурные тесты
 │
 ├── backend/
+│   ├── RoadmapPlusPlus.slnx                 # решение (.NET 10 создаёт .slnx вместо .sln)
+│   ├── global.json                          # версия SDK: 10.0.x
+│   ├── Directory.Build.props                # общие настройки: net10.0, nullable, предупреждения = ошибки
+│   ├── Directory.Packages.props             # версии всех NuGet-пакетов в одном месте
 │   ├── src/
 │   │   ├── Bootstrapper/
 │   │   │   └── RoadmapPlusPlus.Api/         # Program.cs: подключает модули, auth, OpenAPI, health
