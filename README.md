@@ -2,7 +2,7 @@
 
 Сервис для роадмапов и планирования задач в команде. Это один таймлайн от года до минут: гранты, учёба, хакатоны, конференции. Внутри каждого события есть таблица задач, расписание и база знаний в Markdown, которую удобно отдать ИИ.
 
-> **Стадия:** проектирование. Пока в репозитории только структура папок и документация. Код появится на этапе 0 (см. [План работ](#план-работ)).
+> **Стадия:** этап 0 — каркас. Пустое приложение собирается и тестируется в CI и поднимается одной командой `docker compose up`. Дальше — этап 1 (см. [План работ](#план-работ)).
 
 | Где | Как пишем |
 |---|---|
@@ -145,9 +145,13 @@ flowchart LR
 roadmap-plus-plus/
 ├── README.md
 ├── .editorconfig, .gitattributes, .gitignore
+├── compose.yaml                             # стенд: db + api + nginx
+├── compose.override.yaml                    # локально: Development, порт БД наружу
+├── .env.example                             # переменные для compose; копируется в .env
 ├── .github/workflows/                       # CI: backend.yml — формат, сборка, тесты; frontend.yml — линтер, сборка
 │
 ├── backend/
+│   ├── Dockerfile                           # образ API: сборка на SDK, запуск на aspnet
 │   ├── RoadmapPlusPlus.slnx                 # решение (.NET 10 создаёт .slnx вместо .sln)
 │   ├── global.json                          # SDK 10.0.x; dotnet test в режиме Microsoft.Testing.Platform
 │   ├── Directory.Build.props                # общие настройки: net10.0, nullable, предупреждения = ошибки
@@ -200,6 +204,7 @@ roadmap-plus-plus/
 │       └── RoadmapPlusPlus.IntegrationTests/        # API + Postgres в Testcontainers
 │
 ├── frontend/                                # Feature-Sliced Design (облегчённый)
+│   ├── Dockerfile                           # образ nginx со сборкой фронта
 │   ├── public/
 │   └── src/
 │       ├── app/                             # вход (main.tsx, App.tsx), роутер, провайдеры, глобальные стили
@@ -212,8 +217,8 @@ roadmap-plus-plus/
 │       └── shared/                          # api (клиент из OpenAPI), ui-kit, lib, config
 │
 ├── deploy/
-│   ├── nginx/                               # статика фронта + прокси /api
-│   ├── postgres/init/                       # создание схем модулей
+│   ├── nginx/default.conf                   # статика фронта + прокси /api на api:8080
+│   ├── postgres/init/                       # схемы модулей; выполняется при первом запуске БД
 │   └── scripts/                             # деплой, бэкап БД
 │
 └── docs/
@@ -225,8 +230,6 @@ roadmap-plus-plus/
     │   └── examples/                        # наша таблица BPMN-хакатона в MD
     └── design/                              # макеты, скриншоты, референсы интерфейса
 ```
-
-Позже в корне появятся `compose.yaml` (стенд), `compose.override.yaml` (локальная разработка) и `.env.example`, а в `backend/` и `frontend/` — свои `Dockerfile`.
 
 ## Импорт и экспорт Markdown
 
@@ -260,7 +263,7 @@ roadmap-plus-plus/
 
 ## Запуск
 
-> Появится на этапе 0. План:
+Нужен Docker с Compose v2.
 
 ```bash
 cp .env.example .env
@@ -269,6 +272,10 @@ docker compose up -d --build
 # API:     http://localhost:8080/api
 # OpenAPI: http://localhost:8080/api/openapi/v1.json
 ```
+
+`docker compose` сам подхватывает `compose.override.yaml` с настройками для локальной работы: API в режиме Development, БД открыта на хосте как `127.0.0.1:5433`. Порт меняется через `DB_PORT` в `.env`; 5432 не берём, потому что его часто занимает локальный PostgreSQL. На сервере override не нужен: `docker compose -f compose.yaml up -d --build`, а в `.env` задаётся свой пароль БД.
+
+Схемы модулей из `deploy/postgres/init/` создаются только при первом запуске, на пустом томе `db-data`. Сбросить базу: `docker compose down -v`.
 
 Локальная разработка: `docker compose up -d db`, затем `dotnet watch` в `backend/src/Bootstrapper/RoadmapPlusPlus.Api` и `npm ci && npm run dev` в `frontend/` (Node 24 из `frontend/.nvmrc`; Vite на `:5173` проксирует `/api` на бэкенд `:5080`).
 

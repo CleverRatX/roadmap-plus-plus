@@ -1,0 +1,8 @@
+services:
+  db:
+    ports:
+      - "127.0.0.1:${DB_PORT:-5433}:5432"
+
+  api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
