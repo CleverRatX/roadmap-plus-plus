@@ -26,4 +26,7 @@
     <Project Path="src/Modules/Planning/RoadmapPlusPlus.Modules.Planning.Contracts/RoadmapPlusPlus.Modules.Planning.Contracts.csproj" />
     <Project Path="src/Modules/Planning/RoadmapPlusPlus.Modules.Planning/RoadmapPlusPlus.Modules.Planning.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RoadmapPlusPlus.ArchitectureTests/RoadmapPlusPlus.ArchitectureTests.csproj" />
+  </Folder>
 </Solution>

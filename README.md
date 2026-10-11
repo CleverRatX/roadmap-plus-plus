@@ -126,7 +126,7 @@ flowchart LR
 | БД | PostgreSQL 17+ | дерево, JSONB, полнотекстовый поиск по базе знаний |
 | Markdown на сервере | Markdig (GFM-таблицы, YAML front matter), YamlDotNet | импорт/экспорт |
 | ИИ | Microsoft.Extensions.AI (`IChatClient`) | один интерфейс для Mock / OpenAI-совместимых (Qwen, GPT) / Claude |
-| Границы модулей | NetArchTest или ArchUnitNET | архитектурные тесты в CI |
+| Границы модулей | xUnit-тесты: граф ссылок из `.csproj`, публичные типы модулей через reflection. ArchUnitNET — когда понадобятся правила слоёв внутри модуля | архитектурные тесты в CI |
 | Realtime (позже) | SignalR | совместное редактирование |
 | Frontend | React + TypeScript + Vite | SPA |
 | Данные на фронте | TanStack Query, клиент из OpenAPI (orval / openapi-typescript) | кэш, типы из контракта |
@@ -134,7 +134,7 @@ flowchart LR
 | Таймлайн | d3-scale + d3-zoom, своя отрисовка (SVG / Canvas) | плавный зум год → минуты; для быстрого прототипа — vis-timeline |
 | Markdown на фронте | react-markdown + remark-gfm; редактор — CodeMirror 6 или Milkdown | просмотр и правка базы знаний |
 | Инфраструктура | Docker Compose, Nginx | один `docker compose up`, статика + прокси `/api` |
-| Тесты | xUnit, Testcontainers (Postgres), Vitest, Playwright | |
+| Тесты | xUnit v3 на Microsoft.Testing.Platform, Testcontainers (Postgres), Vitest, Playwright | |
 | CI | GitHub Actions | сборка и тесты на каждый PR |
 
 Для хостинга хватит слабого VPS: API, Postgres и Nginx укладываются примерно в 1–2 ГБ ОЗУ. Модели на этом сервере не запускаем: ИИ работает через внешний API или через Ollama на чьём-то ПК.
@@ -149,7 +149,7 @@ roadmap-plus-plus/
 │
 ├── backend/
 │   ├── RoadmapPlusPlus.slnx                 # решение (.NET 10 создаёт .slnx вместо .sln)
-│   ├── global.json                          # версия SDK: 10.0.x
+│   ├── global.json                          # SDK 10.0.x; dotnet test в режиме Microsoft.Testing.Platform
 │   ├── Directory.Build.props                # общие настройки: net10.0, nullable, предупреждения = ошибки
 │   ├── Directory.Packages.props             # версии всех NuGet-пакетов в одном месте
 │   ├── src/
@@ -304,19 +304,13 @@ dotnet add src/Modules/Knowledge/$P.Modules.Knowledge     reference $(c Identity
 dotnet add src/Modules/Interchange/$P.Modules.Interchange reference $(c Identity) $(c Planning) $(c Knowledge)
 dotnet add src/Modules/Assistant/$P.Modules.Assistant     reference $(c Identity) $(c Planning) $(c Interchange)
 
-# тесты
-for t in ArchitectureTests IntegrationTests Modules.Planning.Tests Modules.Knowledge.Tests \
-         Modules.Interchange.Tests Modules.Assistant.Tests; do
-  dotnet new xunit -o tests/$P.$t
-done
-
-dotnet sln add src/*/*/*.csproj src/Modules/*/*/*.csproj tests/*/*.csproj
+dotnet sln add src/*/*/*.csproj src/Modules/*/*/*.csproj
 
 cd ../frontend
 npm create vite@latest . -- --template react-ts   # на вопрос о непустой папке — «Ignore files and continue»
 ```
 
-Ссылки тестов на модули добавляются по мере появления тестов. Модуль Notifications создаём, когда до него дойдём.
+Тестовые проекты создаём по мере появления тестов, по образцу `RoadmapPlusPlus.ArchitectureTests` (xUnit v3 на Microsoft.Testing.Platform). Шаблон `dotnet new xunit` не подходит: он создаёт проект на xUnit v2 и VSTest. Модуль Notifications создаём, когда до него дойдём.
 
 </details>
 
