@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\RoadmapPlusPlus.BuildingBlocks\RoadmapPlusPlus.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\Identity\RoadmapPlusPlus.Modules.Identity.Contracts\RoadmapPlusPlus.Modules.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\Planning\RoadmapPlusPlus.Modules.Planning.Contracts\RoadmapPlusPlus.Modules.Planning.Contracts.csproj" />
+    <ProjectReference Include="..\..\Interchange\RoadmapPlusPlus.Modules.Interchange.Contracts\RoadmapPlusPlus.Modules.Interchange.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

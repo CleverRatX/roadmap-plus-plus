@@ -1,0 +1,29 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Bootstrapper/">
+    <Project Path="src/Bootstrapper/RoadmapPlusPlus.Api/RoadmapPlusPlus.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/RoadmapPlusPlus.BuildingBlocks/RoadmapPlusPlus.BuildingBlocks.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Assistant/">
+    <Project Path="src/Modules/Assistant/RoadmapPlusPlus.Modules.Assistant/RoadmapPlusPlus.Modules.Assistant.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Identity/">
+    <Project Path="src/Modules/Identity/RoadmapPlusPlus.Modules.Identity.Contracts/RoadmapPlusPlus.Modules.Identity.Contracts.csproj" />
+    <Project Path="src/Modules/Identity/RoadmapPlusPlus.Modules.Identity/RoadmapPlusPlus.Modules.Identity.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Interchange/">
+    <Project Path="src/Modules/Interchange/RoadmapPlusPlus.Modules.Interchange.Contracts/RoadmapPlusPlus.Modules.Interchange.Contracts.csproj" />
+    <Project Path="src/Modules/Interchange/RoadmapPlusPlus.Modules.Interchange/RoadmapPlusPlus.Modules.Interchange.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Knowledge/">
+    <Project Path="src/Modules/Knowledge/RoadmapPlusPlus.Modules.Knowledge.Contracts/RoadmapPlusPlus.Modules.Knowledge.Contracts.csproj" />
+    <Project Path="src/Modules/Knowledge/RoadmapPlusPlus.Modules.Knowledge/RoadmapPlusPlus.Modules.Knowledge.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Planning/">
+    <Project Path="src/Modules/Planning/RoadmapPlusPlus.Modules.Planning.Contracts/RoadmapPlusPlus.Modules.Planning.Contracts.csproj" />
+    <Project Path="src/Modules/Planning/RoadmapPlusPlus.Modules.Planning/RoadmapPlusPlus.Modules.Planning.csproj" />
+  </Folder>
+</Solution>

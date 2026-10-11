@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\Identity\RoadmapPlusPlus.Modules.Identity\RoadmapPlusPlus.Modules.Identity.csproj" />
+    <ProjectReference Include="..\..\Modules\Planning\RoadmapPlusPlus.Modules.Planning\RoadmapPlusPlus.Modules.Planning.csproj" />
+    <ProjectReference Include="..\..\Modules\Knowledge\RoadmapPlusPlus.Modules.Knowledge\RoadmapPlusPlus.Modules.Knowledge.csproj" />
+    <ProjectReference Include="..\..\Modules\Interchange\RoadmapPlusPlus.Modules.Interchange\RoadmapPlusPlus.Modules.Interchange.csproj" />
+    <ProjectReference Include="..\..\Modules\Assistant\RoadmapPlusPlus.Modules.Assistant\RoadmapPlusPlus.Modules.Assistant.csproj" />
+  </ItemGroup>
+
+</Project>

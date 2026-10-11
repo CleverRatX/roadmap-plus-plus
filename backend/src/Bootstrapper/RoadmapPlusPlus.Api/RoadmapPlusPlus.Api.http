@@ -1,0 +1,9 @@
+@Api = http://localhost:5080/api
+
+GET {{Api}}/health
+
+###
+
+GET {{Api}}/openapi/v1.json
+
+###
