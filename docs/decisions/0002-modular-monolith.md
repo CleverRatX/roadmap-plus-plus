@@ -47,7 +47,7 @@
 2. Писать в дерево могут только Planning и, через него, `ChangeSet`. Interchange и Assistant **предлагают** ChangeSet, а не пишут в таблицы Planning. В итоге проверки, права, история и поиск конфликтов находятся в одном месте.
 3. Одна база PostgreSQL, **своя схема на модуль** (`identity`, `planning`, `knowledge`, `interchange`, `assistant`), свой `DbContext` и своя история миграций. Между схемами не делаем ни JOIN, ни внешних ключей: модули ссылаются друг на друга только по Id.
 4. Реакции на события («узел удалён → архивировать его документы») идут через внутрипроцессную шину событий из `BuildingBlocks`.
-5. Правила 1–3 проверяют архитектурные тесты (`RoadmapPlusPlus.ArchitectureTests`, NetArchTest или ArchUnitNET) в CI.
+5. Правила 1–3 проверяют архитектурные тесты (`RoadmapPlusPlus.ArchitectureTests`) в CI.
 
 ### Граф зависимостей (только через Contracts)
 
