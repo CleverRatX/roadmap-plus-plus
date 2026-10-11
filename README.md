@@ -145,7 +145,7 @@ flowchart LR
 roadmap-plus-plus/
 ├── README.md
 ├── .editorconfig, .gitattributes, .gitignore
-├── .github/workflows/                       # CI: сборка, тесты, архитектурные тесты
+├── .github/workflows/                       # CI: backend.yml — формат, сборка, тесты бэкенда
 │
 ├── backend/
 │   ├── RoadmapPlusPlus.slnx                 # решение (.NET 10 создаёт .slnx вместо .sln)
@@ -316,7 +316,7 @@ npm create vite@latest . -- --template react-ts   # на вопрос о неп�
 
 ## Ветки и PR
 
-`main` всегда собирается и проходит CI. Напрямую в `main` не коммитим: любая работа идёт в короткой ветке и вливается через PR. Защиту `main` (обязательный PR и зелёный CI) включаем на этапе 0 вместе с CI.
+`main` всегда собирается и проходит CI. Напрямую в `main` не коммитим: любая работа идёт в короткой ветке и вливается через PR. Защита `main`: обязательный PR и зелёная проверка `backend` из [`.github/workflows/backend.yml`](.github/workflows/backend.yml) — формат кода, сборка и тесты бэкенда.
 
 **Имя ветки:** `<тип>/<область>-<суть>`, а если есть issue — `<тип>/<номер>-<область>-<суть>`.
 
