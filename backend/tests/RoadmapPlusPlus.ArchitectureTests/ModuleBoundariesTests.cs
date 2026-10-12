@@ -1,5 +1,7 @@
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 using RoadmapPlusPlus.BuildingBlocks;
+using RoadmapPlusPlus.BuildingBlocks.Persistence;
 
 namespace RoadmapPlusPlus.ArchitectureTests
 {
@@ -70,6 +72,31 @@ namespace RoadmapPlusPlus.ArchitectureTests
             }
 
             AssertNoViolations( violations );
+        }
+
+        [Fact]
+        public void ModuleDbContextsDeriveFromModuleDbContext()
+        {
+            AssertNoViolations( ModuleDbContexts()
+                .Where( t => !typeof( ModuleDbContext ).IsAssignableFrom( t ) )
+                .Select( t => $"{t.Assembly.GetName().Name}: {t.FullName} derives from {nameof( DbContext )}, expected {nameof( ModuleDbContext )}" ) );
+        }
+
+        [Fact]
+        public void ModulesHaveAtMostOneDbContext()
+        {
+            AssertNoViolations( ModuleDbContexts()
+                .GroupBy( t => t.Assembly.GetName().Name )
+                .Where( g => g.Count() > 1 )
+                .Select( g => $"{g.Key}: {g.Count()} {nameof( DbContext )} types, expected at most 1" ) );
+        }
+
+        private static IEnumerable<Type> ModuleDbContexts()
+        {
+            return BackendProjects.All
+                .Where( p => p.Kind is ProjectKind.Module or ProjectKind.Contracts )
+                .SelectMany( p => Assembly.Load( p.Name ).GetTypes() )
+                .Where( t => typeof( DbContext ).IsAssignableFrom( t ) && !t.IsAbstract );
         }
 
         private static void AssertNoViolations( IEnumerable<string> violations )

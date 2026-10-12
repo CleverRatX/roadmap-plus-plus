@@ -247,3 +247,6 @@ resharper_space_within_nameof_parentheses = true
 resharper_space_within_new_parentheses = true
 resharper_space_within_typeof_parentheses = true
 resharper_wrap_object_and_collection_initializer_style = chop_always
+
+[backend/src/**/Migrations/*.cs]
+generated_code = true
