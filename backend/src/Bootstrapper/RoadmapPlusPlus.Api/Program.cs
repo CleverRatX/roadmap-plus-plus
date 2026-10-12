@@ -1,4 +1,5 @@
 using RoadmapPlusPlus.BuildingBlocks;
+using RoadmapPlusPlus.BuildingBlocks.Persistence;
 using RoadmapPlusPlus.Modules.Assistant;
 using RoadmapPlusPlus.Modules.Identity;
 using RoadmapPlusPlus.Modules.Interchange;
@@ -19,6 +20,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder( args );
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
+builder.Services.AddPostgres( builder.Configuration );
 
 foreach ( IModule module in modules )
 {
@@ -26,6 +28,8 @@ foreach ( IModule module in modules )
 }
 
 WebApplication app = builder.Build();
+
+await app.Services.MigrateModuleDatabasesAsync();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
@@ -39,4 +43,4 @@ foreach ( IModule module in modules )
     module.MapEndpoints( api );
 }
 
-app.Run();
+await app.RunAsync();
