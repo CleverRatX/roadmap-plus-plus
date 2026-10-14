@@ -170,7 +170,9 @@ flowchart LR
 | Границы модулей | xUnit-тесты: граф ссылок из `.csproj`, публичные типы модулей через reflection. ArchUnitNET — когда понадобятся правила слоёв внутри модуля | архитектурные тесты в CI |
 | Realtime (позже) | SignalR | совместное редактирование |
 | Frontend | React 19, TypeScript 6, Vite 8, линтер oxlint | SPA |
+| Роутинг | React Router (`createBrowserRouter`) | страницы по адресам, глубокие ссылки |
 | Данные на фронте | TanStack Query, клиент из OpenAPI (orval / openapi-typescript) | кэш, типы из контракта |
+| UI-кит | свои компоненты на CSS Modules + Radix UI для диалога и контекстного меню | доступность (фокус, клавиатура, Esc) без своей реализации |
 | Таблица задач | TanStack Table | своя таблица (вариант A из ADR-0001) |
 | Таймлайн | d3-scale + d3-zoom, своя отрисовка (SVG / Canvas) | плавный зум год → минуты; для быстрого прототипа — vis-timeline |
 | Markdown на фронте | react-markdown + remark-gfm; редактор — CodeMirror 6 или Milkdown | просмотр и правка базы знаний |
@@ -189,7 +191,7 @@ roadmap-plus-plus/
 ├── compose.yaml                             # стенд: db + api + nginx
 ├── compose.override.yaml                    # локально: Development, порт БД наружу
 ├── .env.example                             # переменные для compose; копируется в .env
-├── .github/workflows/                       # CI: backend.yml — формат, сборка, тесты; frontend.yml — линтер, сборка
+├── .github/workflows/                       # CI: backend.yml — формат, сборка, тесты; frontend.yml — линтер, тесты, сборка
 │
 ├── backend/
 │   ├── Dockerfile                           # образ API: сборка на SDK, запуск на aspnet
@@ -251,14 +253,14 @@ roadmap-plus-plus/
 │   ├── Dockerfile                           # образ nginx со сборкой фронта
 │   ├── public/
 │   └── src/
-│       ├── app/                             # вход (main.tsx, App.tsx), роутер, провайдеры, глобальные стили
-│       ├── pages/                           # roadmap, event, agenda, knowledge, settings
-│       ├── widgets/                         # timeline, event-panel, task-table, agenda-list,
+│       ├── app/                             # вход (main.tsx, App.tsx), роутер, провайдеры, каркас страницы, стили и токены
+│       ├── pages/                           # roadmap, event, agenda, knowledge, settings, not-found
+│       ├── widgets/                         # app-header, timeline, event-panel, task-table, agenda-list,
 │       │                                    # kb-viewer, assistant-panel
 │       ├── features/                        # timeline-zoom, item-edit, task-status,
 │       │                                    # md-export, md-import, changeset-review
 │       ├── entities/                        # item, member, field, kb-doc
-│       └── shared/                          # api (клиент из OpenAPI), ui-kit, lib, config
+│       └── shared/                          # api (клиент из OpenAPI), ui (кит), lib (утилиты, настройка тестов), config (пути)
 │
 ├── deploy/
 │   ├── nginx/default.conf                   # статика фронта + прокси /api на api:8080
@@ -321,7 +323,7 @@ docker compose up -d --build
 
 API при старте применяет миграции всех модулей; схему модуля создаёт его первая миграция. Сбросить базу: `docker compose down -v`.
 
-Локальная разработка: `docker compose up -d db`, затем `dotnet watch` в `backend/src/Bootstrapper/RoadmapPlusPlus.Api` и `npm ci && npm run dev` в `frontend/` (Node 24 из `frontend/.nvmrc`; Vite на `:5173` проксирует `/api` на бэкенд `:5080`). Строка подключения для `dotnet watch` лежит в `appsettings.Development.json` и рассчитана на значения из `.env.example`.
+Локальная разработка: `docker compose up -d db`, затем `dotnet watch` в `backend/src/Bootstrapper/RoadmapPlusPlus.Api` и `npm ci && npm run dev` в `frontend/` (Node 24 из `frontend/.nvmrc`; Vite на `:5173` проксирует `/api` на бэкенд `:5080`). Тесты фронта: `npm test` (один прогон) или `npm run test:watch` (перезапуск при изменениях). Строка подключения для `dotnet watch` лежит в `appsettings.Development.json` и рассчитана на значения из `.env.example`.
 
 **Миграции.** `DbContext` модуля наследует `ModuleDbContext` и регистрируется в `AddServices` модуля вызовом `services.AddModuleDbContext<T>()`. Таблицы лежат в схеме модуля (имя модуля в нижнем регистре: `planning`), имена таблиц и колонок — в snake_case, история миграций — в `<схема>.__ef_migrations_history`. Архитектурные тесты следят, что `DbContext` в модуле один и он наследует `ModuleDbContext`. Новая миграция:
 
@@ -381,7 +383,7 @@ dotnet sln add src/*/*/*.csproj src/Modules/*/*/*.csproj
 
 ## Ветки и PR
 
-`main` всегда собирается и проходит CI. Напрямую в `main` не коммитим: любая работа идёт в короткой ветке и вливается через PR. Защита `main`: обязательный PR и зелёные проверки `backend` из [`.github/workflows/backend.yml`](.github/workflows/backend.yml) (формат кода, сборка, тесты) и `frontend` из [`.github/workflows/frontend.yml`](.github/workflows/frontend.yml) (линтер, проверка типов, сборка). Предупреждения в обоих считаются ошибками.
+`main` всегда собирается и проходит CI. Напрямую в `main` не коммитим: любая работа идёт в короткой ветке и вливается через PR. Защита `main`: обязательный PR и зелёные проверки `backend` из [`.github/workflows/backend.yml`](.github/workflows/backend.yml) (формат кода, сборка, тесты) и `frontend` из [`.github/workflows/frontend.yml`](.github/workflows/frontend.yml) (линтер, тесты, проверка типов, сборка). Предупреждения в обоих считаются ошибками.
 
 **Имя ветки:** `<тип>/<область>-<суть>`, а если есть issue — `<тип>/<номер>-<область>-<суть>`.
 

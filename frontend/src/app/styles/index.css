@@ -1,8 +1,53 @@
 :root {
   color-scheme: light dark;
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+
+  --color-bg: light-dark(#f6f7f9, #121418);
+  --color-surface: light-dark(#ffffff, #1b1e24);
+  --color-surface-hover: light-dark(#eef0f3, #262a32);
+  --color-border: light-dark(#dde1e6, #2e333c);
+  --color-text: light-dark(#1b1f24, #e6e8eb);
+  --color-text-muted: light-dark(#5f6b7a, #9aa4b2);
+  --color-accent: light-dark(#3b5bdb, #748ffc);
+  --color-accent-hover: light-dark(#324cc0, #91a7ff);
+  --color-accent-contrast: light-dark(#ffffff, #10131a);
+  --color-danger: light-dark(#c92a2a, #ff8787);
+  --color-success: light-dark(#2b8a3e, #69db7c);
+  --color-overlay: rgb(0 0 0 / 40%);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --radius: 8px;
+  --shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  --header-height: 52px;
+  --side-panel-width: 380px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  line-height: 1.25;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
