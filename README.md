@@ -336,6 +336,8 @@ dotnet ef migrations add <Имя> \
 
 Класс миграции генерируется `internal`, чтобы модуль по-прежнему показывал наружу только свой `IModule`. Папки `Migrations/` в `.editorconfig` помечены как сгенерированный код, поэтому `dotnet format` их не проверяет.
 
+**Тесты.** `dotnet test` в `backend/` запускает все тестовые проекты. Интеграционным (`RoadmapPlusPlus.IntegrationTests`) нужен запущенный Docker: они поднимают API в памяти поверх настоящего Postgres, который Testcontainers сам запускает в контейнере (`postgres:18-alpine`, как в compose) и удаляет после прогона. API при старте применяет к этой базе миграции модулей, так что схема в тестах та же, что в проде. Новый интеграционный тест получает API через конструктор (`PostgresApiFactory api`) и ходит в него через `api.CreateClient()`.
+
 <details>
 <summary>Как превратить папки в проекты (этап 0)</summary>
 
