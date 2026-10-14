@@ -1,7 +1,13 @@
+import { createBrowserRouter, RouterProvider } from 'react-router'
+import { QueryProvider } from './providers/QueryProvider'
+import { routes } from './router/routes'
+
+const router = createBrowserRouter(routes)
+
 export function App() {
   return (
-    <main>
-      <h1>Roadmap++</h1>
-    </main>
+    <QueryProvider>
+      <RouterProvider router={router} />
+    </QueryProvider>
   )
 }
