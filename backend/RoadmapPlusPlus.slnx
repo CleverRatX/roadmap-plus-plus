@@ -28,5 +28,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/RoadmapPlusPlus.ArchitectureTests/RoadmapPlusPlus.ArchitectureTests.csproj" />
+    <Project Path="tests/RoadmapPlusPlus.BuildingBlocks.Tests/RoadmapPlusPlus.BuildingBlocks.Tests.csproj" />
   </Folder>
 </Solution>

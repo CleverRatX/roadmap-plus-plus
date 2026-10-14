@@ -108,6 +108,33 @@ flowchart LR
 3. Одна база, **своя схема на модуль**, свой `DbContext` и свои миграции. Между схемами нет JOIN: ссылки только по Id.
 4. Реакции на события («узел удалён → архивировать документы») идут через простую внутрипроцессную шину из `BuildingBlocks`.
 
+### Ошибки API
+
+Ожидаемая ошибка — не исключение, а `Error` внутри `Result` из `BuildingBlocks`. Эндпоинт превращает его в ответ вызовом `result.ToHttpResult()`. Исключения остаются для непредвиденного.
+
+| `Error` | Статус | Пример |
+|---|---|---|
+| `Validation` | 400 | пустое название; поля перечислены в `errors` |
+| `Forbidden` | 403 | нет прав на команду или узел |
+| `NotFound` | 404 | узла нет или он не виден пользователю |
+| `Conflict` | 409 | узел нельзя перенести в собственного потомка |
+
+Любая ошибка, включая 404 на несуществующий адрес и 500, приходит как ProblemDetails (`application/problem+json`):
+
+```json
+{
+  "status": 404,
+  "title": "Not Found",
+  "detail": "Узел не найден.",
+  "code": "planning.item_not_found",
+  "requestId": "0HNP8MNM14SG4:00000001"
+}
+```
+
+- `code` — стабильный машинный код, по нему фронт различает ошибки. `detail` — текст для человека.
+- `requestId` совпадает с заголовком `X-Request-Id` (он есть у любого ответа) и с id запроса в логах. По нему ошибку пользователя находят в логе.
+- На необработанное исключение API пишет в лог стек вызовов с id запроса и отвечает 500. Текст исключения в `detail` попадает только в Development.
+
 ## Доменная модель
 
 Черновик, уточняем на этапе 1.
@@ -174,7 +201,7 @@ roadmap-plus-plus/
 │   ├── src/
 │   │   ├── Bootstrapper/
 │   │   │   └── RoadmapPlusPlus.Api/         # Program.cs: подключает модули, БД и миграции, auth, OpenAPI, health
-│   │   │       ├── Middleware/              # ошибки, логирование, id запроса
+│   │   │       ├── Middleware/              # ошибки в ProblemDetails, необработанные исключения, X-Request-Id
 │   │   │       └── Persistence/             # настройки dotnet ef: миграции генерируются internal
 │   │   ├── BuildingBlocks/
 │   │   │   └── RoadmapPlusPlus.BuildingBlocks/   # IModule, ModuleDbContext, Result, Entity, шина событий — минимум общего
@@ -212,6 +239,7 @@ roadmap-plus-plus/
 │   │       └── Notifications/                                    # позже: Telegram-бот
 │   └── tests/
 │       ├── RoadmapPlusPlus.ArchitectureTests/       # границы модулей: только *.Contracts, без циклов
+│       ├── RoadmapPlusPlus.BuildingBlocks.Tests/    # Result, Error и их перевод в HTTP-ответ
 │       ├── RoadmapPlusPlus.Modules.Planning.Tests/
 │       ├── RoadmapPlusPlus.Modules.Knowledge.Tests/
 │       ├── RoadmapPlusPlus.Modules.Interchange.Tests/

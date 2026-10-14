@@ -1,3 +1,4 @@
+using RoadmapPlusPlus.Api.Middleware;
 using RoadmapPlusPlus.BuildingBlocks;
 using RoadmapPlusPlus.BuildingBlocks.Persistence;
 using RoadmapPlusPlus.Modules.Assistant;
@@ -17,7 +18,7 @@ IModule[] modules =
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder( args );
 
-builder.Services.AddProblemDetails();
+builder.Services.AddErrorHandling();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddPostgres( builder.Configuration );
@@ -31,8 +32,7 @@ WebApplication app = builder.Build();
 
 await app.Services.MigrateModuleDatabasesAsync();
 
-app.UseExceptionHandler();
-app.UseStatusCodePages();
+app.UseErrorHandling();
 
 RouteGroupBuilder api = app.MapGroup( "/api" );
 api.MapOpenApi( "/openapi/{documentName}.json" );
