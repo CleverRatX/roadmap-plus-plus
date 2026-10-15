@@ -35,6 +35,15 @@ jobs:
       - name: Install
         run: npm ci --no-audit --no-fund
 
+      - name: Check API client
+        run: |
+          npm run api:generate
+          if [ -n "$(git status --porcelain -- src/shared/api/schema.d.ts)" ]; then
+            git diff -- src/shared/api/schema.d.ts
+            echo "::error::src/shared/api/schema.d.ts не совпадает с backend/openapi/openapi.json. Запустите npm run api:generate и закоммитьте результат."
+            exit 1
+          fi
+
       - name: Lint
         run: npm run lint
 

@@ -43,5 +43,13 @@ jobs:
       - name: Build
         run: dotnet build --no-restore --configuration Release
 
+      - name: Check OpenAPI document
+        run: |
+          if [ -n "$(git status --porcelain -- openapi)" ]; then
+            git diff -- openapi
+            echo "::error::backend/openapi/openapi.json не совпадает с кодом. Соберите бэкенд и закоммитьте документ."
+            exit 1
+          fi
+
       - name: Test
         run: dotnet test --no-build --configuration Release

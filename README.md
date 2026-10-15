@@ -108,6 +108,27 @@ flowchart LR
 3. Одна база, **своя схема на модуль**, свой `DbContext` и свои миграции. Между схемами нет JOIN: ссылки только по Id.
 4. Реакции на события («узел удалён → архивировать документы») идут через простую внутрипроцессную шину из `BuildingBlocks`.
 
+### Контракт API
+
+Фронт не описывает запросы руками: типы берутся из OpenAPI-документа бэкенда.
+
+1. `dotnet build` бэкенда пишет документ в [`backend/openapi/openapi.json`](backend/openapi/openapi.json) (`Microsoft.Extensions.ApiDescription.Server`). Документ лежит в git, поэтому изменение API видно в диффе PR.
+2. `npm run api:generate` во `frontend/` превращает его в типы `src/shared/api/schema.d.ts` (`openapi-typescript`).
+3. Запрос пишется через клиент `api` (`openapi-fetch`): путь, параметры и ответ проверяет компилятор.
+
+```ts
+const item = useQuery({
+  queryKey: ['items', itemId],
+  queryFn: ({ signal }) => unwrap(api.GET('/api/items/{itemId}', { params: { path: { itemId } }, signal })),
+})
+```
+
+`unwrap` возвращает данные, а ответ с ошибкой превращает в `HttpError` с полями `status`, `code`, `requestId` и `fieldErrors` из ProblemDetails.
+
+Поменяли эндпоинт — соберите бэкенд, запустите `npm run api:generate` и закоммитьте оба файла. CI проверяет оба шага: `backend` падает, если документ не совпадает с кодом, `frontend` — если типы не совпадают с документом.
+
+Чтобы тип ответа попал в документ, эндпоинт возвращает `result.ToHttpResult()`, а возможные ошибки объявляет через `.ProducesProblem(404)`.
+
 ### Ошибки API
 
 Ожидаемая ошибка — не исключение, а `Error` внутри `Result` из `BuildingBlocks`. Эндпоинт превращает его в ответ вызовом `result.ToHttpResult()`. Исключения остаются для непредвиденного.
@@ -171,7 +192,7 @@ flowchart LR
 | Realtime (позже) | SignalR | совместное редактирование |
 | Frontend | React 19, TypeScript 6, Vite 8, линтер oxlint | SPA |
 | Роутинг | React Router (`createBrowserRouter`) | страницы по адресам, глубокие ссылки |
-| Данные на фронте | TanStack Query, клиент из OpenAPI (orval / openapi-typescript) | кэш, типы из контракта |
+| Данные на фронте | TanStack Query; типы из OpenAPI — openapi-typescript, клиент — openapi-fetch | кэш, типы из контракта |
 | UI-кит | свои компоненты на CSS Modules + Radix UI для диалога и контекстного меню | доступность (фокус, клавиатура, Esc) без своей реализации |
 | Таблица задач | TanStack Table | своя таблица (вариант A из ADR-0001) |
 | Таймлайн | d3-scale + d3-zoom, своя отрисовка (SVG / Canvas) | плавный зум год → минуты; для быстрого прототипа — vis-timeline |
@@ -191,7 +212,7 @@ roadmap-plus-plus/
 ├── compose.yaml                             # стенд: db + api + nginx
 ├── compose.override.yaml                    # локально: Development, порт БД наружу
 ├── .env.example                             # переменные для compose; копируется в .env
-├── .github/workflows/                       # CI: backend.yml — формат, сборка, тесты; frontend.yml — линтер, тесты, сборка
+├── .github/workflows/                       # CI: backend.yml — формат, сборка, OpenAPI-документ, тесты; frontend.yml — клиент API, линтер, тесты, сборка
 │
 ├── backend/
 │   ├── Dockerfile                           # образ API: сборка на SDK, запуск на aspnet
@@ -200,6 +221,7 @@ roadmap-plus-plus/
 │   ├── Directory.Build.props                # общие настройки: net10.0, nullable, предупреждения = ошибки
 │   ├── Directory.Packages.props             # версии всех NuGet-пакетов в одном месте
 │   ├── .config/dotnet-tools.json            # dotnet-ef как локальный инструмент: dotnet tool restore
+│   ├── openapi/openapi.json                 # контракт API: генерируется при сборке, лежит в git, из него — клиент фронта
 │   ├── src/
 │   │   ├── Bootstrapper/
 │   │   │   └── RoadmapPlusPlus.Api/         # Program.cs: подключает модули, БД и миграции, auth, OpenAPI, health
@@ -260,7 +282,7 @@ roadmap-plus-plus/
 │       ├── features/                        # timeline-zoom, item-edit, task-status,
 │       │                                    # md-export, md-import, changeset-review
 │       ├── entities/                        # item, member, field, kb-doc
-│       └── shared/                          # api (клиент из OpenAPI), ui (кит), lib (утилиты, настройка тестов), config (пути)
+│       └── shared/                          # api (schema.d.ts из OpenAPI, клиент, ошибки), ui (кит), lib (утилиты, настройка тестов), config (пути)
 │
 ├── deploy/
 │   ├── nginx/default.conf                   # статика фронта + прокси /api на api:8080
@@ -383,7 +405,7 @@ dotnet sln add src/*/*/*.csproj src/Modules/*/*/*.csproj
 
 ## Ветки и PR
 
-`main` всегда собирается и проходит CI. Напрямую в `main` не коммитим: любая работа идёт в короткой ветке и вливается через PR. Защита `main`: обязательный PR и зелёные проверки `backend` из [`.github/workflows/backend.yml`](.github/workflows/backend.yml) (формат кода, сборка, тесты) и `frontend` из [`.github/workflows/frontend.yml`](.github/workflows/frontend.yml) (линтер, тесты, проверка типов, сборка). Предупреждения в обоих считаются ошибками.
+`main` всегда собирается и проходит CI. Напрямую в `main` не коммитим: любая работа идёт в короткой ветке и вливается через PR. Защита `main`: обязательный PR и зелёные проверки `backend` из [`.github/workflows/backend.yml`](.github/workflows/backend.yml) (формат кода, сборка, актуальность OpenAPI-документа, тесты) и `frontend` из [`.github/workflows/frontend.yml`](.github/workflows/frontend.yml) (актуальность клиента API, линтер, тесты, проверка типов, сборка). Предупреждения в обоих считаются ошибками.
 
 **Имя ветки:** `<тип>/<область>-<суть>`, а если есть issue — `<тип>/<номер>-<область>-<суть>`.
 
