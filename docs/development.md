@@ -1,0 +1,105 @@
+# Разработка
+
+## Запуск всего стенда
+
+Нужен только Docker с Compose v2.
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+# UI:      http://localhost:8080
+# API:     http://localhost:8080/api
+# OpenAPI: http://localhost:8080/api/openapi/v1.json
+```
+
+`docker compose` сам подхватывает `compose.override.yaml` с настройками для локальной работы: API запускается в режиме Development, а БД открыта на хосте как `127.0.0.1:5433`. Порт можно поменять через `DB_PORT` в `.env`, а 5432 мы не берём, потому что его часто занимает локальный PostgreSQL. На сервере override не нужен, там запускаем `docker compose -f compose.yaml up -d --build` и задаём в `.env` свой пароль БД.
+
+При старте API сам применяет миграции всех модулей, а схему каждого модуля создаёт его первая миграция. Если базу нужно сбросить начисто, хватит `docker compose down -v`.
+
+## Локальная разработка
+
+Обычно удобнее держать в Docker только базу, а бэкенд и фронт запускать напрямую, тогда изменения подхватываются на лету:
+
+```bash
+docker compose up -d db
+
+cd backend/src/Bootstrapper/RoadmapPlusPlus.Api
+dotnet watch
+
+cd frontend
+npm ci
+npm run dev
+```
+
+Node нужен 24-й, версия записана в `frontend/.nvmrc`. Vite работает на `:5173` и проксирует `/api` на бэкенд `:5080`. Строка подключения для `dotnet watch` лежит в `appsettings.Development.json` и рассчитана на значения из `.env.example`, так что если вы меняли пароль или порт в `.env`, поправьте и её.
+
+## Миграции
+
+`DbContext` модуля наследует `ModuleDbContext` и регистрируется в `AddServices` модуля вызовом `services.AddModuleDbContext<T>()`. Дальше всё происходит само: таблицы попадают в схему модуля (это имя модуля в нижнем регистре, например `planning`), имена таблиц и колонок пишутся в snake_case, а история миграций лежит в `<схема>.__ef_migrations_history`. Архитектурные тесты следят, чтобы `DbContext` в модуле был один и наследовал `ModuleDbContext`.
+
+Новая миграция создаётся так:
+
+```bash
+cd backend
+dotnet tool restore
+dotnet ef migrations add <Имя> \
+  --project src/Modules/Planning/RoadmapPlusPlus.Modules.Planning \
+  --startup-project src/Bootstrapper/RoadmapPlusPlus.Api \
+  --output-dir Infrastructure/Persistence/Migrations
+```
+
+Класс миграции генерируется `internal`, иначе модуль показывал бы наружу не только свой `IModule` и архитектурный тест бы упал. Папки `Migrations/` в `.editorconfig` помечены как сгенерированный код, поэтому `dotnet format` к ним не придирается.
+
+## Изменения API
+
+Если вы добавили или поменяли эндпоинт, соберите бэкенд (документ `backend/openapi/openapi.json` обновится сам), потом выполните `npm run api:generate` во `frontend/` и закоммитьте оба файла вместе с кодом. Как устроена эта цепочка и почему CI на ней падает, описано в [архитектуре](architecture.md#контракт-api).
+
+## Тесты
+
+`dotnet test` в `backend/` запускает все тестовые проекты бэкенда. Интеграционным тестам (`RoadmapPlusPlus.IntegrationTests`) нужен запущенный Docker: они поднимают API в памяти поверх настоящего Postgres, который Testcontainers сам запускает в контейнере (`postgres:18-alpine`, как в compose) и удаляет после прогона. API при старте применяет к этой базе миграции модулей, так что схема в тестах ровно та же, что в проде. Новый интеграционный тест получает API через конструктор (`PostgresApiFactory api`) и ходит в него через `api.CreateClient()`.
+
+На фронте `npm test` делает один прогон, а `npm run test:watch` перезапускает тесты при каждом изменении.
+
+## Как появились проекты
+
+Это история этапа 0, повторять её не нужно, но иногда полезно понимать, откуда что взялось.
+
+<details>
+<summary>Команды, которыми создавались проекты</summary>
+
+```bash
+cd backend
+P=RoadmapPlusPlus
+dotnet new sln -n $P
+
+dotnet new webapi   -o src/Bootstrapper/$P.Api
+dotnet new classlib -o src/BuildingBlocks/$P.BuildingBlocks
+
+for m in Identity Planning Knowledge Interchange Assistant; do
+  dotnet new classlib -o src/Modules/$m/$P.Modules.$m
+  dotnet add src/Modules/$m/$P.Modules.$m reference src/BuildingBlocks/$P.BuildingBlocks
+  dotnet add src/Bootstrapper/$P.Api reference src/Modules/$m/$P.Modules.$m
+done
+
+for m in Identity Planning Knowledge Interchange; do
+  dotnet new classlib -o src/Modules/$m/$P.Modules.$m.Contracts
+  dotnet add src/Modules/$m/$P.Modules.$m.Contracts reference src/BuildingBlocks/$P.BuildingBlocks
+  dotnet add src/Modules/$m/$P.Modules.$m reference src/Modules/$m/$P.Modules.$m.Contracts
+done
+
+c() { echo src/Modules/$1/$P.Modules.$1.Contracts; }
+dotnet add src/Modules/Planning/$P.Modules.Planning       reference $(c Identity)
+dotnet add src/Modules/Knowledge/$P.Modules.Knowledge     reference $(c Identity) $(c Planning)
+dotnet add src/Modules/Interchange/$P.Modules.Interchange reference $(c Identity) $(c Planning) $(c Knowledge)
+dotnet add src/Modules/Assistant/$P.Modules.Assistant     reference $(c Identity) $(c Planning) $(c Interchange)
+
+dotnet sln add src/*/*/*.csproj src/Modules/*/*/*.csproj
+```
+
+Сначала каждый модуль получает ссылку на `BuildingBlocks`, а Api подключает все модули. Потом проекты `Contracts` заводятся только у тех модулей, которые вызывают другие, и в конце модули связываются между собой строго через `Contracts`, по графу из ADR-0002.
+
+Фронтенд создан шаблоном `create-vite` (`react-ts`) во временной папке и перенесён в структуру FSD: точка входа `src/app/main.tsx`, алиас `@/` указывает на `src/`.
+
+Тестовые проекты заводим по мере появления тестов и делаем по образцу `RoadmapPlusPlus.ArchitectureTests` (xUnit v3 на Microsoft.Testing.Platform). Шаблон `dotnet new xunit` не подходит, потому что создаёт проект на xUnit v2 и VSTest. Модуль Notifications создадим, когда до него дойдём.
+
+</details>
