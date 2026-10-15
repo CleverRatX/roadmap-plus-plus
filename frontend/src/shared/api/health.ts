@@ -12,5 +12,5 @@ export async function fetchHealth(signal?: AbortSignal): Promise<HealthStatus> {
     return text as HealthStatus
   }
 
-  throw new HttpError(response.status, `API не ответил: ${response.status}`)
+  throw new HttpError(response.status)
 }
